@@ -1,0 +1,57 @@
+import heapq
+
+def print_board(state):
+    for i in range(9):
+        print("_" if state[i] == -1 else state[i], end=" ")
+        if i % 3 == 2: print()
+    print()
+
+def heuristic(s, g):
+    return sum(abs((s[i]//3)-(g.index(s[i])//3)) + abs((s[i]%3)-(g.index(s[i])%3)) 
+               for i in range(9) if s[i] != -1)
+
+def get_moves(state):
+    i = state.index(-1)
+    moves = []
+    for d in [-1, 1, -3, 3]:
+        ni = i + d
+        if 0 <= ni < 9 and not (i % 3 == 0 and d == -1) and not (i % 3 == 2 and d == 1):
+            new = state[:]
+            new[i], new[ni] = new[ni], new[i]
+            moves.append(new)
+    return moves
+
+def solvable(state):
+    inv = sum(1 for i in range(9) for j in range(i+1, 9)
+              if state[i] > state[j] and state[i] != -1 and state[j] != -1)
+    return inv % 2 == 0
+
+def astar(start, goal):
+    heap = [(heuristic(start, goal), 0, start, [])]
+    visited = set()
+
+    while heap:
+        f, g, curr, path = heapq.heappop(heap)
+        if curr == goal:
+            for p in path + [curr]: print_board(p)
+            print(f"Solved in {g} moves")
+            return
+        visited.add(tuple(curr))
+        for move in get_moves(curr):
+            if tuple(move) not in visited:
+                heapq.heappush(heap, (g+1+heuristic(move, goal), g+1, move, path + [curr]))
+    print("Unsolvable")
+
+def main():
+    print("Enter start state (-1 for empty):")
+    start = [int(input()) for _ in range(9)]
+    print("Enter goal state (-1 for empty):")
+    goal = [int(input()) for _ in range(9)]
+
+    if solvable(start):
+        astar(start, goal)
+    else:
+        print("Not solvable")
+
+if __name__ == '__main__':
+    main()
